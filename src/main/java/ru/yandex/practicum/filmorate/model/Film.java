@@ -8,9 +8,9 @@ import java.time.LocalDate;
 @Slf4j
 @Data
 public class Film {
-    int id;
-    String name;
-    String description;
-    LocalDate releaseDate;
-    Integer duration;
+    private int id;
+    private String name;
+    private String description;
+    private LocalDate releaseDate;
+    private Integer duration;
 }

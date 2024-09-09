@@ -17,8 +17,6 @@ import java.util.Map;
 @RequestMapping("/users")
 public class UserController {
     private final Map<Integer, User> users = new HashMap<>();
-    private final List<String> emails = new ArrayList<>();
-    private final List<String> logins = new ArrayList<>();
     private int id;
 
     private int getNextId() {
@@ -33,29 +31,13 @@ public class UserController {
     @PostMapping
     public User addNewUser(@RequestBody User user) {
         log.info("Пришел запрос на создание нового пользователя с email = {}", user.getEmail());
-        if (user.getEmail() == null || user.getEmail().isBlank()) {
-            throw new ValidationException("Имейл должен быть указан");
-        } else if (!user.getEmail().contains("@")) {
-            throw new ValidationException("Имейл должен содержать символ '@'");
-        } else if (emails.contains(user.getEmail())) {
-            throw new DuplicatedDataException("Этот имейл уже используется");
-        } else if (user.getLogin() == null || user.getLogin().isBlank() || user.getLogin().contains(" ")) {
-            throw new ValidationException("Логин не может быть пустым или содержать пробелы");
-        } else if (logins.contains(user.getLogin())) {
-            throw new DuplicatedDataException("Такой логин уже используется");
-        } else if (user.getBirthday() == null || user.getBirthday() == LocalDate.now() ||
-                   user.getBirthday().isAfter(LocalDate.now())) {
-            throw new ValidationException("Некорректная дата рождения");
-        }
-
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
-        }
-
+        checkEmail(user.getEmail());
+        checkLogin(user.getLogin());
+        checkBirthday(user.getBirthday());
+        String newName = checkName(user.getName(), user.getLogin());
+        user.setName(newName);
         user.setId(getNextId());
         users.put(user.getId(), user);
-        emails.add(user.getEmail());
-        logins.add(user.getLogin());
         return user;
     }
 
@@ -65,42 +47,65 @@ public class UserController {
         if (!users.containsKey(user.getId())) {
             throw new ValidationException("Пользователя с таким id не существует");
         }
-
         User changeUser = users.get(user.getId());
-
         if (user.getEmail() == null || user.getEmail().isBlank()) {
             user.setEmail(changeUser.getEmail());
         } else {
-            if (!user.getEmail().contains("@")) {
-                throw new ValidationException("Имейл должен содержать символ '@'");
-            } else if (emails.contains(user.getEmail())) {
-                throw new DuplicatedDataException("Этот имейл уже используется");
-            }
+            checkEmail(user.getEmail());
         }
         if (user.getLogin() == null || user.getLogin().isBlank()) {
             user.setLogin(changeUser.getLogin());
         } else {
-            if (user.getLogin().contains(" ")) {
-                throw new ValidationException("Логин не может быть пустым или содержать пробелы");
-            }
+            checkLogin(user.getLogin());
         }
-
         if (user.getBirthday() == null) {
             user.setBirthday(changeUser.getBirthday());
         } else {
-            if (user.getBirthday() == LocalDate.now() || user.getBirthday().isAfter(LocalDate.now())) {
-                throw new ValidationException("Некорректная дата рождения");
-            }
+            checkBirthday(user.getBirthday());
         }
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
-        }
-
-        logins.remove(changeUser.getLogin());
-        logins.add(user.getLogin());
-        emails.remove(changeUser.getEmail());
-        emails.add(user.getEmail());
+        String newName = checkName(user.getName(), user.getLogin());
+        user.setName(newName);
         users.put(user.getId(), user);
         return user;
+    }
+
+    void checkBirthday(LocalDate birthday) {
+        if (birthday == null || birthday == LocalDate.now() ||
+            birthday.isAfter(LocalDate.now())) {
+            throw new ValidationException("Некорректная дата рождения");
+        }
+    }
+
+    void checkEmail(String email) {
+        if (email == null || email.isBlank()) {
+            throw new ValidationException("Имейл должен быть указан");
+        } else if (!email.contains("@")) {
+            throw new ValidationException("Имейл должен содержать символ '@'");
+        } else {
+            for (User user1 : users.values()) {
+                if (user1.getEmail().equals(email)) {
+                    throw new DuplicatedDataException("Этот имейл уже используется");
+                }
+            }
+        }
+    }
+
+    void checkLogin(String login) {
+        if (login == null || login.isBlank() || login.contains(" ")) {
+            throw new ValidationException("Логин не может быть пустым или содержать пробелы");
+        } else {
+            for (User user1 : users.values()) {
+                if (user1.getEmail().equals(login)) {
+                    throw new DuplicatedDataException("Такой логин уже используется");
+                }
+            }
+        }
+    }
+
+    String checkName(String name, String login) {
+        if (name == null || name.isBlank()) {
+            return login;
+        }
+        return name;
     }
 }
