@@ -7,10 +7,10 @@ import java.time.LocalDate;
 
 @Slf4j
 @Data
-public class Film {
+public class User {
     private int id;
+    private String email;
+    private String login;
     private String name;
-    private String description;
-    private LocalDate releaseDate;
-    private Integer duration;
+    private LocalDate birthday;
 }
