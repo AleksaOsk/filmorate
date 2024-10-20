@@ -5,10 +5,10 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class DuplicatedDataException extends RuntimeException {
+public class NotFoundException extends RuntimeException {
     private String reason;
 
-    public DuplicatedDataException(String reason) {
+    public NotFoundException(String reason) {
         this.reason = reason;
     }
 }

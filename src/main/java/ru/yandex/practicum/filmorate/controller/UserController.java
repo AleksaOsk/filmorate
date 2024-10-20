@@ -1,111 +1,60 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import lombok.extern.slf4j.Slf4j;
+import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.user.UserService;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-@Slf4j
+
 @RestController
 @RequestMapping("/users")
+@AllArgsConstructor
 public class UserController {
-    private final Map<Integer, User> users = new HashMap<>();
-    private int id;
-
-    private int getNextId() {
-        return ++id;
-    }
+    UserService userService;
 
     @GetMapping
     public List<User> getUsers() { // /users  //для получения списка пользователей.
-        return new ArrayList<>(users.values());
+        return userService.getAllUsers();
+    }
+
+    @GetMapping("/{id}")
+    public User getUser(@PathVariable("id") long id) { // /users  //для получения списка пользователей.
+        return userService.getUser(id);
     }
 
     @PostMapping
     public User addNewUser(@RequestBody User user) {
-        log.info("Пришел запрос на создание нового пользователя с email = {}", user.getEmail());
-        checkEmail(user.getEmail());
-        checkLogin(user.getLogin());
-        checkBirthday(user.getBirthday());
-        String newName = checkName(user.getName(), user.getLogin());
-        user.setName(newName);
-        user.setId(getNextId());
-        users.put(user.getId(), user);
-        return user;
+        return userService.addNewUser(user);
     }
 
     @PutMapping
     public User updateUser(@RequestBody User user) {
-        log.info("Пришел запрос на изменение информации о пользователе с id = {} ", user.getId());
-        if (!users.containsKey(user.getId())) {
-            throw new ValidationException("Пользователя с таким id не существует");
-        }
-        User changeUser = users.get(user.getId());
-        if (user.getEmail() == null || user.getEmail().isBlank()) {
-            user.setEmail(changeUser.getEmail());
-        } else {
-            checkEmail(user.getEmail());
-        }
-        if (user.getLogin() == null || user.getLogin().isBlank()) {
-            user.setLogin(changeUser.getLogin());
-        } else {
-            checkLogin(user.getLogin());
-        }
-        if (user.getBirthday() == null) {
-            user.setBirthday(changeUser.getBirthday());
-        } else {
-            checkBirthday(user.getBirthday());
-        }
-        String newName = checkName(user.getName(), user.getLogin());
-        user.setName(newName);
-        users.put(user.getId(), user);
-        return user;
+        return userService.updateUser(user);
     }
 
-    void checkBirthday(LocalDate birthday) {
-        if (birthday == null || birthday == LocalDate.now() ||
-            birthday.isAfter(LocalDate.now())) {
-            throw new ValidationException("Некорректная дата рождения");
-        }
+    @ResponseStatus(HttpStatus.OK)
+    @PutMapping("/{id}/friends/{friendId}") // добавление в друзья.
+    public User addFriend(@PathVariable("id") long id, @PathVariable("friendId") long friendId) throws Throwable {
+        return userService.addFriend(id, friendId);
     }
 
-    void checkEmail(String email) {
-        if (email == null || email.isBlank()) {
-            throw new ValidationException("Имейл должен быть указан");
-        } else if (!email.contains("@")) {
-            throw new ValidationException("Имейл должен содержать символ '@'");
-        } else {
-            for (User user1 : users.values()) {
-                if (user1.getEmail().equals(email)) {
-                    throw new DuplicatedDataException("Этот имейл уже используется");
-                }
-            }
-        }
+    @ResponseStatus(HttpStatus.OK)
+    @DeleteMapping("/{id}/friends/{friendId}") // удаление из друзей.
+    public User deleteFriend(@PathVariable("id") long id, @PathVariable("friendId") long friendId) {
+        return userService.deleteFriend(id, friendId);
     }
 
-    void checkLogin(String login) {
-        if (login == null || login.isBlank() || login.contains(" ")) {
-            throw new ValidationException("Логин не может быть пустым или содержать пробелы");
-        } else {
-            for (User user1 : users.values()) {
-                if (user1.getEmail().equals(login)) {
-                    throw new DuplicatedDataException("Такой логин уже используется");
-                }
-            }
-        }
+    @GetMapping("/{id}/friends") // возвращаем список пользователей, являющихся его друзьями.
+    public List<User> getAllFriends(@PathVariable("id") long id) {
+        return userService.getAllFriends(id);
     }
 
-    String checkName(String name, String login) {
-        if (name == null || name.isBlank()) {
-            return login;
-        }
-        return name;
+    @GetMapping("/{id}/friends/common/{otherId}") // список друзей, общих с другим пользователем.
+    public List<User> getCommonFriends(@PathVariable("id") long id, @PathVariable("otherId") long otherId) {
+        return userService.getCommonFriends(id, otherId);
     }
+
 }
