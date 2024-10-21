@@ -13,7 +13,7 @@ import java.util.List;
 @RequestMapping("/users")
 @AllArgsConstructor
 public class UserController {
-    UserService userService;
+    private final UserService userService;
 
     @GetMapping
     public List<User> getUsers() { // /users  //для получения списка пользователей.
@@ -35,13 +35,11 @@ public class UserController {
         return userService.updateUser(user);
     }
 
-    @ResponseStatus(HttpStatus.OK)
     @PutMapping("/{id}/friends/{friendId}") // добавление в друзья.
     public User addFriend(@PathVariable("id") long id, @PathVariable("friendId") long friendId) throws Throwable {
         return userService.addFriend(id, friendId);
     }
 
-    @ResponseStatus(HttpStatus.OK)
     @DeleteMapping("/{id}/friends/{friendId}") // удаление из друзей.
     public User deleteFriend(@PathVariable("id") long id, @PathVariable("friendId") long friendId) {
         return userService.deleteFriend(id, friendId);

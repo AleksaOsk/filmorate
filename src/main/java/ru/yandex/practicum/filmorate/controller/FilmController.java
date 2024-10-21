@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import lombok.AllArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.film.FilmService;
@@ -14,7 +13,7 @@ import java.util.List;
 @RequestMapping("/films")
 @AllArgsConstructor
 public class FilmController {
-    FilmService filmService;
+    private final FilmService filmService;
 
     @GetMapping
     public Collection<Film> getFilms() {
@@ -41,7 +40,6 @@ public class FilmController {
         return filmService.deleteLike(id, userId);
     }
 
-    @ResponseStatus(HttpStatus.OK)
     @GetMapping("/popular") // возвращает список из первых count фильмов по количеству лайков.
     // Если значение параметра count не задано, верните первые 10
     public List<Film> getPopularFilms(@RequestParam(defaultValue = "10") long count) {

@@ -6,8 +6,8 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
-import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -18,11 +18,11 @@ import java.util.Set;
 @Service
 @AllArgsConstructor
 public class FilmService {
-    InMemoryFilmStorage inMemoryFilmStorage;
-    InMemoryUserStorage inMemoryUserStorage;
+    private final FilmStorage filmStorage;
+    private final UserStorage userStorage;
 
     public List<Film> getAllFilms() {
-        return inMemoryFilmStorage.getAllFilms();
+        return filmStorage.getAllFilms();
     }
 
     public Film addNewFilm(Film film) {
@@ -31,16 +31,16 @@ public class FilmService {
         checkDescription(film);
         checkReleaseDate(film);
         checkFilmDuration(film);
-        return inMemoryFilmStorage.addNewFilm(film);
+        return filmStorage.addNewFilm(film);
     }
 
     public Film updateFilm(Film film) {
         log.info("Пришел запрос на изменение информации о фильме с id = {} ", film.getId());
-        if (!inMemoryFilmStorage.getFilms().containsKey(film.getId())) {
+        if (filmStorage.getFilm(film.getId()) == null) {
             throw new NotFoundException("Фильма с таким id не существует");
         }
 
-        Film changeFilm = inMemoryFilmStorage.getFilms().get(film.getId());
+        Film changeFilm = filmStorage.getFilm(film.getId());
 
         if (film.getName() == null || film.getName().isBlank()) {
             film.setName(changeFilm.getName());
@@ -62,28 +62,28 @@ public class FilmService {
         } else {
             checkFilmDuration(film);
         }
-        return inMemoryFilmStorage.updateFilm(film);
+        return filmStorage.updateFilm(film);
     }
 
     public Film addLike(long id, long userId) {
         log.info("Пришел запрос на добавление лайка к фильму с id {} от пользователя с userId {}", id, userId);
         checkId(id);
         checkUserId(userId);
-        return inMemoryFilmStorage.addLike(id, userId);
+        return filmStorage.addLike(id, userId);
     }
 
     public Film deleteLike(long id, long userId) {
         log.info("Пришел запрос на удаление лайка к фильму с id {} от пользователя с userId {}", id, userId);
         checkId(id);
         checkUserId(userId);
-        return inMemoryFilmStorage.deleteLike(id, userId);
+        return filmStorage.deleteLike(id, userId);
     }
 
     // возвращает список из первых count фильмов по количеству лайков.
     // Если значение параметра count не задано, верните первые 10
     public List<Film> getPopularFilms(long count) {
         log.info("Пришел запрос на получение списка из {} самых популярных фильмов", count);
-        Set<Film> filmsSet = inMemoryFilmStorage.getPopularFilms();
+        Set<Film> filmsSet = filmStorage.getPopularFilms();
         List<Film> films = new ArrayList<>(filmsSet);
 
         List<Film> popularFilm = new ArrayList<>();
@@ -126,13 +126,13 @@ public class FilmService {
     }
 
     private void checkId(long id) {
-        if (!inMemoryFilmStorage.getFilms().containsKey(id)) {
+        if (filmStorage.getFilm(id) == null) {
             throw new NotFoundException("Фильм с таким id не существует");
         }
     }
 
     private void checkUserId(long userId) {
-        if (!inMemoryUserStorage.getUsers().containsKey(userId)) {
+        if (userStorage.getUser(userId) == null) {
             throw new NotFoundException("Пользователя с таким id не существует");
         }
     }

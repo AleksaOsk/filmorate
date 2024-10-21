@@ -7,7 +7,7 @@ import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -18,16 +18,16 @@ import java.util.Set;
 @Service
 @AllArgsConstructor
 public class UserService {
-    InMemoryUserStorage inMemoryUserStorage;
+    private final UserStorage userStorage;
 
     public List<User> getAllUsers() { // /users  //для получения списка пользователей.
         log.info("Пришел запрос на получение списка всех пользователей");
-        return inMemoryUserStorage.getAllUsers();
+        return userStorage.getAllUsers();
     }
 
     public User getUser(long id) {
         log.info("Пришел запрос на получение пользователя с {}", id);
-        return inMemoryUserStorage.getUser(id);
+        return userStorage.getUser(id);
     }
 
     public User addNewUser(User user) {
@@ -37,13 +37,13 @@ public class UserService {
         checkBirthday(user.getBirthday());
         String newName = checkName(user.getName(), user.getLogin());
         user.setName(newName);
-        return inMemoryUserStorage.addNewUser(user);
+        return userStorage.addNewUser(user);
     }
 
     public User updateUser(User user) {
         log.info("Пришел запрос на изменение информации о пользователе с id = {} ", user.getId());
         checkId(user.getId());
-        User changeUser = inMemoryUserStorage.getUsers().get(user.getId());
+        User changeUser = userStorage.getUser(user.getId());
         if (user.getEmail() == null || user.getEmail().isBlank() || user.getEmail().equals(changeUser.getEmail())) {
             user.setEmail(changeUser.getEmail());
         } else {
@@ -61,27 +61,27 @@ public class UserService {
         }
         String newName = checkName(user.getName(), user.getLogin());
         user.setName(newName);
-        return inMemoryUserStorage.updateUser(user);
+        return userStorage.updateUser(user);
     }
 
     public User addFriend(long id, long friendId) {
         log.info("Пришел запрос от пользователя с id {} на добавление в друзья пользователя с id {}", id, friendId);
         checkId(id);
         checkId(friendId);
-        return inMemoryUserStorage.addFriend(id, friendId);
+        return userStorage.addFriend(id, friendId);
     }
 
     public User deleteFriend(long id, long friendId) {
         log.info("Пришел запрос от пользователя с id {} на удаление из друзей пользователя с id {}", id, friendId);
         checkId(id);
         checkId(friendId);
-        return inMemoryUserStorage.deleteFriend(id, friendId);
+        return userStorage.deleteFriend(id, friendId);
     }
 
     public List<User> getAllFriends(long id) {
         log.info("Пришел запрос на получение списка друзей пользователя с id {}", id);
         checkId(id);
-        Set<Long> userId = inMemoryUserStorage.getAllFriends(id);
+        Set<Long> userId = userStorage.getAllFriends(id);
         List<User> users = new ArrayList<>();
         for (Long user : userId) {
             users.add(getUser(user));
@@ -95,8 +95,8 @@ public class UserService {
 
         checkId(id);
         checkId(otherId);
-        Set<Long> userFriends = inMemoryUserStorage.getAllFriends(id);
-        Set<Long> otherUserFriends = inMemoryUserStorage.getAllFriends(otherId);
+        Set<Long> userFriends = userStorage.getAllFriends(id);
+        Set<Long> otherUserFriends = userStorage.getAllFriends(otherId);
 
         List<User> commonId = new ArrayList<>();
 
@@ -135,7 +135,7 @@ public class UserService {
         if (login == null || login.isBlank() || login.contains(" ")) {
             throw new ValidationException("Логин не может быть пустым или содержать пробелы");
         } else {
-            for (User user1 : inMemoryUserStorage.getUsers().values()) {
+            for (User user1 : userStorage.getAllUsers()) {
                 if (user1.getEmail().equals(login)) {
                     throw new DuplicatedDataException("Такой логин уже используется");
                 }
@@ -151,7 +151,7 @@ public class UserService {
     }
 
     private void checkId(long id) {
-        if (!inMemoryUserStorage.getUsers().containsKey(id)) {
+        if (userStorage.getUser(id) == null) {
             throw new NotFoundException("Пользователя с таким id не существует");
         }
     }
