@@ -44,17 +44,17 @@ Template repository for Filmorate project.
 1. Получение списка всех фильмов
     
         SELECT f.*,
-               m.id,
-               m.name
+               r.id,
+               r.name
         FROM films AS f
-        LEFT JOIN mpa AS m ON f.id = m.id;
+        LEFT JOIN rating AS r ON f.id = r.id;
     
 2. Получение информации о фильме по его ID
     
         SELECT f.*,
-               m.name
+               r.name
         FROM films AS f
-        LEFT JOIN mpa AS m ON f.id = m.id
+        LEFT JOIN rating AS r ON f.id = r.id
         WHERE f.id = ?;
     
 3. Получение информации о пользователе по его ID
