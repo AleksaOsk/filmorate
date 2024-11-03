@@ -44,26 +44,29 @@ Template repository for Filmorate project.
 1. Получение списка всех фильмов
     
         SELECT f.*,
-               r.id,
-               r.name
-        FROM films AS f
-        LEFT JOIN rating AS r ON f.id = r.id;
-    
-2. Получение информации о фильме по его ID
-    
-        SELECT f.*,
-               r.name
+               r.name,
+               c.name
         FROM films AS f
         LEFT JOIN rating AS r ON f.id = r.id
+        LEFT JOIN category AS c ON f.id = c.id;
+    
+3. Получение информации о фильме по его ID
+    
+        SELECT f.*,
+               r.name,
+               c.name
+        FROM films AS f
+        LEFT JOIN rating AS r ON f.id = r.id
+        LEFT JOIN category AS c ON f.id = c.id
         WHERE f.id = ?;
     
-3. Получение информации о пользователе по его ID
+4. Получение информации о пользователе по его ID
         
         SELECT u.*
         FROM users AS u
         WHERE u.id = ?;
 
-4. Получение списка друзей пользователя
+5. Получение списка друзей пользователя
     
         SELECT u.id,
                u.email,
