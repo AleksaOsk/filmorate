@@ -19,7 +19,7 @@ Template repository for Filmorate project.
 - Атрибуты: category_id, name.
 
 Таблица film_category:
-- Связывает фильмы и жанры.
+- Связывает фильмы и жанры (так как у одного фильма может быть несколько жанров).
 - Атрибуты: film_id, category_id.
 - Связи: film_id (Foreign Key) ссылается на movies(film_id), category_id (Foreign Key) ссылается на category(category_id).
 
