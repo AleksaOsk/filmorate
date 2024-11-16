@@ -58,9 +58,9 @@ CREATE TABLE if not exists likes (
 
 ALTER TABLE films ADD FOREIGN KEY (mpa_id) REFERENCES mpa (id);
 
-ALTER TABLE film_genre ADD FOREIGN KEY (genre_id) REFERENCES genre (id);
+ALTER TABLE film_genres ADD FOREIGN KEY (genre_id) REFERENCES genres (id);
 
-ALTER TABLE film_genre ADD FOREIGN KEY (film_id) REFERENCES films (id);
+ALTER TABLE film_genres ADD FOREIGN KEY (film_id) REFERENCES films (id);
 
 ALTER TABLE friendships ADD FOREIGN KEY (user_id) REFERENCES users (id);
 
