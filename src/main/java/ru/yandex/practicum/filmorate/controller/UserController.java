@@ -2,8 +2,10 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.service.user.UserService;
+import ru.yandex.practicum.filmorate.dto.user.NewUserRequest;
+import ru.yandex.practicum.filmorate.dto.user.UpdateUserRequest;
+import ru.yandex.practicum.filmorate.dto.user.UserDto;
+import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.List;
 
@@ -15,43 +17,47 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping
-    public List<User> getUsers() { // /users  //для получения списка пользователей.
+    public List<UserDto> getUsers() { // /users  //для получения списка пользователей.
         return userService.getAllUsers();
     }
 
     @GetMapping("/{id}")
-    public User getUser(@PathVariable("id") long id) { // /users  //для получения списка пользователей.
+    public UserDto getUser(@PathVariable("id") long id) { // /users  //для получения списка пользователей.
         return userService.getUser(id);
     }
 
     @PostMapping
-    public User addNewUser(@RequestBody User user) {
-        return userService.addNewUser(user);
+    public UserDto addNewUser(@RequestBody NewUserRequest request) {
+        return userService.addNewUser(request);
     }
 
     @PutMapping
-    public User updateUser(@RequestBody User user) {
-        return userService.updateUser(user);
+    public UserDto updateUser(@RequestBody UpdateUserRequest request) {
+        return userService.updateUser(request);
     }
 
-    @PutMapping("/{id}/friends/{friendId}") // добавление в друзья.
-    public User addFriend(@PathVariable("id") long id, @PathVariable("friendId") long friendId) throws Throwable {
+    @DeleteMapping("/{id}")
+    public UserDto deleteUser(@PathVariable("id") long id) {
+        return userService.deleteUser(id);
+    }
+
+    @PutMapping("/{id}/friends/{friend_id}") // добавление в друзья.
+    public UserDto addFriend(@PathVariable("id") long id, @PathVariable("friend_id") long friendId) {
         return userService.addFriend(id, friendId);
     }
 
-    @DeleteMapping("/{id}/friends/{friendId}") // удаление из друзей.
-    public User deleteFriend(@PathVariable("id") long id, @PathVariable("friendId") long friendId) {
+    @DeleteMapping("/{id}/friends/{friend_id}") // удаление из друзей.
+    public UserDto deleteFriend(@PathVariable("id") long id, @PathVariable("friend_id") long friendId) {
         return userService.deleteFriend(id, friendId);
     }
 
     @GetMapping("/{id}/friends") // возвращаем список пользователей, являющихся его друзьями.
-    public List<User> getAllFriends(@PathVariable("id") long id) {
+    public List<UserDto> getAllFriends(@PathVariable("id") long id) {
         return userService.getAllFriends(id);
     }
 
-    @GetMapping("/{id}/friends/common/{otherId}") // список друзей, общих с другим пользователем.
-    public List<User> getCommonFriends(@PathVariable("id") long id, @PathVariable("otherId") long otherId) {
-        return userService.getCommonFriends(id, otherId);
+    @GetMapping("/{id}/friends/common/{friend_id}") // список друзей, общих с другим пользователем.
+    public List<UserDto> getCommonFriends(@PathVariable("id") long id, @PathVariable("friend_id") long friendId) {
+        return userService.getCommonFriends(id, friendId);
     }
-
 }

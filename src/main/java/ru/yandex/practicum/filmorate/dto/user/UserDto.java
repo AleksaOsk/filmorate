@@ -1,13 +1,13 @@
-package ru.yandex.practicum.filmorate.model;
+package ru.yandex.practicum.filmorate.dto.user;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
 
-@Slf4j
 @Data
-public class User {
+public class UserDto {
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private long id;
     private String email;
     private String login;
