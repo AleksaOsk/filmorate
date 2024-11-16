@@ -1,7 +1,7 @@
 # java-filmorate
 Template repository for Filmorate project.
 
-![Untitled (1)](https://github.com/user-attachments/assets/a97105c7-90ae-4fdb-9149-fad86bc5ae90)
+![2024-11-16_22-13-43](https://github.com/user-attachments/assets/67da9f35-e9e4-4d99-9bef-bf22ef5974c7)
 
 **Пояснение к схеме:**
 
