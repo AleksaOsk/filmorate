@@ -5,9 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dal.FriendshipRepository;
 import ru.yandex.practicum.filmorate.dal.UserRepository;
-import ru.yandex.practicum.filmorate.dto.user.NewUserRequest;
-import ru.yandex.practicum.filmorate.dto.user.UpdateUserRequest;
-import ru.yandex.practicum.filmorate.dto.user.UserDto;
+import ru.yandex.practicum.filmorate.dto.user.NewUserRequestDto;
+import ru.yandex.practicum.filmorate.dto.user.UpdateUserRequestDto;
+import ru.yandex.practicum.filmorate.dto.user.UserResponseDto;
 import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -21,13 +21,13 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
-@Service
+@Service("userService")
 @AllArgsConstructor
-public class UserService {
+public class UserService implements UserInterface {
     private final UserRepository userRepository;
     private final FriendshipRepository friendshipRepository;
 
-    public List<UserDto> getAllUsers() { // /users  //для получения списка пользователей.
+    public List<UserResponseDto> getAllUsers() { // /users  //для получения списка пользователей.
         log.info("Пришел запрос на получение списка всех пользователей");
         return userRepository.getAllUsers()
                 .stream()
@@ -35,14 +35,14 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-    public UserDto getUser(long id) {
+    public UserResponseDto getUser(long id) {
         log.info("Пришел запрос на получение пользователя с {}", id);
         return userRepository.getUserById(id)
                 .map(UserMapper::mapToUserDto)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден с ID: " + id));
     }
 
-    public UserDto addNewUser(NewUserRequest request) {
+    public UserResponseDto addNewUser(NewUserRequestDto request) {
         log.info("Пришел запрос на создание нового пользователя с email = {}", request.getEmail());
         checkEmail(request.getEmail());
         checkLogin(request.getLogin());
@@ -56,7 +56,7 @@ public class UserService {
         return UserMapper.mapToUserDto(user);
     }
 
-    public UserDto updateUser(UpdateUserRequest request) {
+    public UserResponseDto updateUser(UpdateUserRequestDto request) {
         log.info("Пришел запрос на изменение информации о пользователе с id = {} ", request.getId());
         checkId(request.getId());
         Optional<User> userOptional = userRepository.getUserById(request.getId());
@@ -76,7 +76,7 @@ public class UserService {
         return UserMapper.mapToUserDto(user);
     }
 
-    public UserDto deleteUser(long userId) {
+    public UserResponseDto deleteUser(long userId) {
         User user = userRepository.getUserById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с идентификатором " + userId + " не найден."));
         if (!userRepository.delete(userId)) {
@@ -86,7 +86,7 @@ public class UserService {
         return UserMapper.mapToUserDto(user);
     }
 
-    public UserDto addFriend(long id, long friendId) {
+    public UserResponseDto addFriend(long id, long friendId) {
         log.info("Пришел запрос от пользователя с id {} на добавление в друзья пользователя с id {}", id, friendId);
         if (id == friendId) {
             log.error("id пользователей совпадают");
@@ -105,7 +105,7 @@ public class UserService {
         return getUser(id);
     }
 
-    public UserDto deleteFriend(long id, long friendId) {
+    public UserResponseDto deleteFriend(long id, long friendId) {
         log.info("Пришел запрос от пользователя с id {} на удаление из друзей пользователя с id {}", id, friendId);
         checkId(id);
         checkId(friendId);
@@ -117,14 +117,14 @@ public class UserService {
         return getUser(id);
     }
 
-    public List<UserDto> getAllFriends(long id) {
+    public List<UserResponseDto> getAllFriends(long id) {
         log.info("Пришел запрос на получение списка друзей пользователя с id {}", id);
         userRepository.getUserById(id)
                 .orElseThrow(() -> new NotFoundException("Пользователь с идентификатором " + id + " не найден."));
         return getUsersById(friendshipRepository.getFriendsById(id));
     }
 
-    public List<UserDto> getCommonFriends(long id, long otherId) {
+    public List<UserResponseDto> getCommonFriends(long id, long otherId) {
         log.info("Пришел запрос от пользователя с id {} на получение списка общих друзей с пользователем с id {}",
                 id, otherId);
         checkId(id);
@@ -132,7 +132,7 @@ public class UserService {
         return getUsersById(friendshipRepository.getCommonFriends(id, otherId));
     }
 
-    private List<UserDto> getUsersById(List<Long> idsList) {
+    private List<UserResponseDto> getUsersById(List<Long> idsList) {
         return idsList.stream()
                 .map(this::getUser)
                 .collect(Collectors.toList());

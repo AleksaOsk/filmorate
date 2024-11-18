@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dal.MpaRepository;
-import ru.yandex.practicum.filmorate.dto.mpa.MpaDto;
+import ru.yandex.practicum.filmorate.dto.mpa.MpaResponseDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.mapper.MpaMapper;
 
@@ -12,12 +12,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
-@Service
+@Service("mpaService")
 @AllArgsConstructor
-public class MpaService {
-    MpaRepository mpaRepository;
+public class MpaService implements MpaInterface {
+    private final MpaRepository mpaRepository;
 
-    public List<MpaDto> getAllMpa() {
+    public List<MpaResponseDto> getAllMpa() {
         log.info("Пришел запрос на получение списка возрастных рейтингов");
         return mpaRepository.getAllMpa()
                 .stream()
@@ -25,7 +25,7 @@ public class MpaService {
                 .collect(Collectors.toList());
     }
 
-    public MpaDto getMpaById(long id) {
+    public MpaResponseDto getMpaById(long id) {
         log.info("Пришел запрос на получение возрастного рейтинга с {}", id);
         if (mpaRepository.getMpaById(id).isEmpty()) {
             throw new NotFoundException("Неверный id mpa");

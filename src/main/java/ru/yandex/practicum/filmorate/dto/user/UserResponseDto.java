@@ -6,7 +6,7 @@ import lombok.Data;
 import java.time.LocalDate;
 
 @Data
-public class UserDto {
+public class UserResponseDto {
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private long id;
     private String email;

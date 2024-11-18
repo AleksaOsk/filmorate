@@ -31,15 +31,6 @@ public class FriendshipRepository extends BaseRepository<Long> {
                 friendId);
     }
 
-    public void updateFriendsStatus(long id, long friendId, String status) {
-        update(
-                UPDATE_FRIEND_STATUS_QUERY.query,
-                status,
-                id,
-                friendId
-        );
-    }
-
     public List<Long> getFriendsById(long id) {
         return findMany(
                 FIND_ALL_FRIENDS_BY_ID_QUERY.query,

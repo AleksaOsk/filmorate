@@ -8,37 +8,36 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Data
-public class UpdateFilmRequest {
+public class UpdateFilmRequestDto {
     private Long id;
     private String name;
     private String description;
     private LocalDate releaseDate;
     private Integer duration;
-    private int rate;
     private List<Genre> genres;
     private Mpa mpa;
 
-    public boolean hasFilmId() {
-        return !(id == null);
-    }
-
     public boolean hasFilmName() {
-        return !(name == null || name.isBlank());
+        return name != null && !name.isBlank();
     }
 
     public boolean hasDescription() {
-        return !(description == null || description.isBlank());
+        return description != null && !description.isBlank();
     }
 
     public boolean hasReleaseDate() {
-        return !(releaseDate == null);
+        return releaseDate != null;
     }
 
     public boolean hasDuration() {
-        return !(duration == null);
+        return duration != null;
     }
 
     public boolean hasGenres() {
-        return !(genres == null);
+        return genres != null;
+    }
+
+    public boolean hasMpa() {
+        return mpa != null;
     }
 }

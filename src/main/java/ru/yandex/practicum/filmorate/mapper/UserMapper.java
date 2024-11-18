@@ -2,14 +2,14 @@ package ru.yandex.practicum.filmorate.mapper;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import ru.yandex.practicum.filmorate.dto.user.NewUserRequest;
-import ru.yandex.practicum.filmorate.dto.user.UpdateUserRequest;
-import ru.yandex.practicum.filmorate.dto.user.UserDto;
+import ru.yandex.practicum.filmorate.dto.user.NewUserRequestDto;
+import ru.yandex.practicum.filmorate.dto.user.UpdateUserRequestDto;
+import ru.yandex.practicum.filmorate.dto.user.UserResponseDto;
 import ru.yandex.practicum.filmorate.model.User;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class UserMapper {
-    public static User mapToUser(NewUserRequest request) {
+    public static User mapToUser(NewUserRequestDto request) {
         User user = new User();
         user.setEmail(request.getEmail());
         user.setLogin(request.getLogin());
@@ -18,8 +18,8 @@ public final class UserMapper {
         return user;
     }
 
-    public static UserDto mapToUserDto(User user) {
-        UserDto userDto = new UserDto();
+    public static UserResponseDto mapToUserDto(User user) {
+        UserResponseDto userDto = new UserResponseDto();
         userDto.setId(user.getId());
         userDto.setEmail(user.getEmail());
         userDto.setLogin(user.getLogin());
@@ -28,7 +28,7 @@ public final class UserMapper {
         return userDto;
     }
 
-    public static User updateUserFields(User user, UpdateUserRequest request) {
+    public static User updateUserFields(User user, UpdateUserRequestDto request) {
         if (request.hasEmail()) {
             user.setEmail(request.getEmail());
         }

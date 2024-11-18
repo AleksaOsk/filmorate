@@ -4,7 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dal.*;
-import ru.yandex.practicum.filmorate.dto.film.FilmDto;
+import ru.yandex.practicum.filmorate.dto.film.FilmResponseDto;
+import ru.yandex.practicum.filmorate.dto.film.NewFilmRequestDto;
+import ru.yandex.practicum.filmorate.dto.film.UpdateFilmRequestDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.FilmMapper;
@@ -19,17 +21,18 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
-@Service
+@Service("filmService")
 @AllArgsConstructor
-public class FilmService {
-    FilmRepository filmRepository;
-    UserRepository userRepository;
-    FilmLikeRepository filmLikeRepository;
-    GenreRepository genreRepository;
-    MpaRepository mpaRepository;
-    FilmGenresRepository filmGenresRepository;
+public class FilmService implements FilmInterface {
 
-    public List<FilmDto> getAllFilms() {
+    private final FilmRepository filmRepository;
+    private final UserRepository userRepository;
+    private final FilmLikeRepository filmLikeRepository;
+    private final GenreRepository genreRepository;
+    private final MpaRepository mpaRepository;
+    private final FilmGenresRepository filmGenresRepository;
+
+    public List<FilmResponseDto> getAllFilms() {
         log.info("Пришел запрос на получение списка всех фильмов");
         return filmRepository.getAllFilms()
                 .stream()
@@ -39,7 +42,7 @@ public class FilmService {
                 .collect(Collectors.toList());
     }
 
-    public FilmDto getFilmById(long id) {
+    public FilmResponseDto getFilmById(long id) {
         log.info("Пришел запрос на получение фильма с {}", id);
         Film film = filmRepository.getFilmById(id)
                 .orElseThrow(() -> new NotFoundException("Фильм с идентификатором " + id + " не найден."));
@@ -48,23 +51,24 @@ public class FilmService {
         return FilmMapper.mapToFilmDto(film);
     }
 
-    public FilmDto addNewFilm(Film request) {
+    public FilmResponseDto addNewFilm(NewFilmRequestDto request) {
         log.info("Пришел запрос на создание нового фильма с названием - {}", request.getName());
         checkName(request.getName());
         checkDescription(request.getDescription());
         checkReleaseDate(request.getReleaseDate());
         checkFilmDuration(request.getDuration());
 
-        setRating(request);
-        setGenres(request);
-        request = filmRepository.addNewFilm(request);
-        if (request.getGenres() != null) {
-            filmGenresRepository.save(request.getId(), checkGenreListDuplicates(request.getGenres()));
+        Film film = FilmMapper.mapToFilm(request);
+        setRating(film);
+        setGenres(film);
+        film = filmRepository.addNewFilm(film);
+        if (film.getGenres() != null) {
+            filmGenresRepository.save(film.getId(), checkGenreListDuplicates(film.getGenres()));
         }
-        return FilmMapper.mapToFilmDto(request);
+        return FilmMapper.mapToFilmDto(film);
     }
 
-    public FilmDto updateFilm(Film request) {
+    public FilmResponseDto updateFilm(UpdateFilmRequestDto request) {
         log.info("Пришел запрос на изменение информации о фильме с id = {} ", request.getId());
         checkId(request.getId());
         checkName(request.getName());
@@ -72,22 +76,27 @@ public class FilmService {
         checkReleaseDate(request.getReleaseDate());
         checkFilmDuration(request.getDuration());
 
-        FilmDto serviceOldFilm = getFilmById(request.getId());
+        Optional<Film> filmOptional = filmRepository.getFilmById(request.getId());
+        Film film = filmOptional.get();
+        Film filmReq = FilmMapper.updateFilmFields(film, request);
+
+        FilmResponseDto serviceOldFilm = getFilmById(filmReq.getId());
 
         if (serviceOldFilm.getGenres() != null && !serviceOldFilm.getGenres().isEmpty()) {
-            filmGenresRepository.delete(request.getId());
+            filmGenresRepository.delete(filmReq.getId());
         }
-        if (request.getGenres() != null && !request.getGenres().isEmpty()) {
-            filmGenresRepository.save(request.getId(), request.getGenres());
+        if (filmReq.getGenres() != null && !filmReq.getGenres().isEmpty()) {
+            filmGenresRepository.save(filmReq.getId(), filmReq.getGenres());
         }
-        setRating(request);
-        setGenres(request);
-        filmRepository.updateFilm(request);
-        log.info("Фильм {} был успешно обновлен", request);
-        return FilmMapper.mapToFilmDto(request);
+        setRating(filmReq);
+        setGenres(filmReq);
+
+        filmRepository.updateFilm(filmReq);
+        log.info("Фильм {} был успешно обновлен", filmReq);
+        return FilmMapper.mapToFilmDto(filmReq);
     }
 
-    public FilmDto deleteFilm(long filmId) {
+    public FilmResponseDto deleteFilm(long filmId) {
         log.error("Пришел запрос на изменение информации о фильме с id = {} ", filmId);
         Film film = filmRepository.getFilmById(filmId)
                 .orElseThrow(() -> new NotFoundException("Фильм с идентификатором " + filmId + " не найден."));
@@ -98,7 +107,7 @@ public class FilmService {
         return FilmMapper.mapToFilmDto(film);
     }
 
-    public FilmDto addLike(long id, long userId) {
+    public FilmResponseDto addLike(long id, long userId) {
         log.info("Пришел запрос на добавление лайка к фильму с id {} от пользователя с userId {}", id, userId);
         checkId(id);
         checkUserId(userId);
@@ -110,7 +119,7 @@ public class FilmService {
         return getFilmById(id);
     }
 
-    public FilmDto deleteLike(long id, long userId) {
+    public FilmResponseDto deleteLike(long id, long userId) {
         log.info("Пришел запрос на удаление лайка к фильму с id {} от пользователя с userId {}", id, userId);
         checkId(id);
         checkUserId(userId);
@@ -122,9 +131,7 @@ public class FilmService {
 
     }
 
-    // возвращает список из первых count фильмов по количеству лайков.
-    // Если значение параметра count не задано, верните первые 10
-    public List<FilmDto> getPopularFilms(long count) {
+    public List<FilmResponseDto> getPopularFilms(long count) {
         log.info("Пришел запрос на получение списка из {} самых популярных фильмов", count);
         return filmRepository.getPopularFilms(count)
                 .stream()
@@ -148,11 +155,12 @@ public class FilmService {
 
     public Film setRating(Film film) {
         if (film.getMpa() != null) {
-            Optional<Mpa> oMpa = mpaRepository.getMpaById(film.getMpa().getId());
+            long mpaId = film.getMpa().getId();
+            Optional<Mpa> oMpa = mpaRepository.getMpaById(mpaId);
             if (oMpa.isPresent()) {
                 film.setMpa(oMpa.get());
             } else {
-                throw new ValidationException("Фильм с идентификатором " + film.getId() + " не найден.");
+                throw new ValidationException("Возрастной рейтинг с идентификатором " + mpaId + " не найден.");
             }
         }
         return film;
@@ -213,4 +221,5 @@ public class FilmService {
                 .collect(Collectors.toMap(Genre::getId, genre -> genre, (existing, replacement) -> existing));
         return uniqueGenresMap.values().stream().collect(Collectors.toList());
     }
+
 }

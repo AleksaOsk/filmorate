@@ -11,7 +11,7 @@ import java.util.Optional;
 
 import static ru.yandex.practicum.filmorate.dal.requests.UserRequests.*;
 
-@Repository
+@Repository("userRepository")
 public class UserRepository extends BaseRepository<User> {
     public UserRepository(JdbcTemplate jdbc, RowMapper<User> mapper) {
         super(jdbc, mapper);
